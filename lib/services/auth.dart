@@ -38,10 +38,10 @@ class Auth implements BaseAuth {
         }
         if(documents.length !=0){
           prefs = await SharedPreferences.getInstance();
-          await prefs.setString('photoUrlFromSignIn', documents[0]['photoUrl']);
-          await prefs.setString('nameFromSignIn', documents[0]['displayName']);
-          await prefs.setInt('phoneNoFromSignIn', documents[0]['phoneNo']);
-          await prefs.setString('roleFromSignIn', documents[0]['role']);
+          await prefs.setString('photoUrlFromSignIn', documents[0].data['photoUrl']);
+          await prefs.setString('nameFromSignIn', documents[0].data['displayName']);
+          await prefs.setInt('phoneNoFromSignIn', documents[0].data['phoneNo']);
+          await prefs.setString('roleFromSignIn', documents[0].data['role']);
 
         }
         return result;
@@ -65,8 +65,10 @@ class Auth implements BaseAuth {
         final List<DocumentSnapshot> documents = snap.documents;
         if(documents.length !=0){
           prefs = await SharedPreferences.getInstance();
-          await prefs.setString('photoUrlFromSignIn', documents[0]['photoUrl']);
-          await prefs.setString('nameFromSignIn', documents[0]['displayName']);
+          await prefs.setString('photoUrlFromSignIn', documents[0].data['photoUrl']);
+          await prefs.setString('nameFromSignIn', documents[0].data['displayName']);
+          await prefs.setInt('phoneNoFromSignIn', documents[0].data['phoneNo']);
+          await prefs.setString('roleFromSignIn', documents[0].data['role']);
         }
         return result;
   }

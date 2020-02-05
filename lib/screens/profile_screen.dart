@@ -126,17 +126,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             alignment: Alignment.center,
                             child: CircleAvatar(
                               radius: 90,
-                              backgroundColor: themeColor,
                               child: ClipOval(
                                 child: SizedBox(
-                                  width: 170,
-                                  height: 170,
+                                  width: 150,
+                                  height: 150,
                                   child: downloadUrl == null
-                                      ? Container()
-                                      : Image.network(
-                                          downloadUrl,
-                                          fit: BoxFit.fill,
+                                      ? Container(
+                                        width: 150,
+                                        height: 150,
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                            image: AssetImage('assets/emptypic.png'),
+                                          )
                                         ),
+                                        child: Container())
+                                      
+                                      : Container(
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                        image: NetworkImage(downloadUrl),
+                                        fit: BoxFit.cover
+                                      )
+                                        ),
+                                      )
+                                      // : Image.network(
+                                      //     downloadUrl,
+                                      //     fit: BoxFit.fill,
+                                      //   ),
                                 ),
                               ),
                             ),
@@ -253,8 +269,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           alignment: Alignment.centerLeft,
           child: Container(
             child: Icon(
-              MaterialCommunityIcons.marker,
-              color: themeColor,
+              Icons.edit,
+              color: primaryColor,
             ),
           ),
         )

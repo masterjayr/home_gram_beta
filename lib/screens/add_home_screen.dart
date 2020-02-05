@@ -11,7 +11,7 @@ import 'package:home_gram_beta/ui/const.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
 
-const kGoogleApiKey = "API_KEY";
+const kGoogleApiKey = "AIzaSyBOpNS-z4fmAzb4XENYk15I2Ed_hpgPIlE";
 
 GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: kGoogleApiKey);
 

@@ -43,7 +43,8 @@ dependencies:
   google_maps_webservice: ^0.0.16
   geocoder: ^0.2.1
   geoflutterfire: any
-  latlong: ^0.6.1
+  introduction_screen: ^1.0.7
+  google_fonts: ^0.3.2
 
 
 dev_dependencies:
@@ -66,6 +67,14 @@ flutter:
   assets:
    - assets/bestfriends.png
    - assets/notbestfriends.png
+   - assets/home_map_marker.png
+   - assets/home_map_marker2.png
+   - assets/homegramservice.png
+   - assets/letsgo.png
+   - assets/meetlandlord.png
+   - assets/onboarding1.png
+   - assets/welcomeaboard.png
+   - assets/emptypic.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
@@ -5,8 +7,11 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:carousel_pro/carousel_pro.dart';
 import 'package:home_gram_beta/ui/const.dart';
+import 'dart:ui' as ui;
 
 class HomeDetailScreen extends StatefulWidget {
+  final Map<String, dynamic> house;
+  HomeDetailScreen({this.house});
   @override
   _HomeDetailScreenState createState() => _HomeDetailScreenState();
 }
@@ -16,16 +21,48 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
   var currentLocation;
   GoogleMapController mapController;
   List<Marker> _markers = [];
+  List<NetworkImage> carouselImages = List<NetworkImage>();
+  Uint8List houseMarker;
+  String firstImageUrl; 
 
   void _onMapCreated(GoogleMapController controller) {
     setState(() {
       mapController = controller;
     });
   }
+  
+  void getInitialDetails() {
+    for(int i = 0; i < widget.house['uploadedImages'].length; i++){
+      setState(() {
+        carouselImages.add(NetworkImage(widget.house['uploadedImages'][i]));  
+      });
+    }
+    setState(() {
+      firstImageUrl = widget.house['uploadedImages'][0];
+      _markers.add(Marker(
+        markerId: MarkerId(widget.house['address']),
+        position: LatLng(widget.house['position']['geopoint'].latitude,
+            widget.house['position']['geopoint'].longitude),
+        infoWindow: InfoWindow(title: widget.house['address']),
+        icon: BitmapDescriptor.fromBytes(houseMarker)));
+    });
+  }
+
+  Future<Uint8List> getBytesFromAsset(String path, int width, int height) async {
+    ByteData data = await rootBundle.load(path);
+    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: width, targetHeight: height);
+    ui.FrameInfo fi = await codec.getNextFrame();
+    return (await fi.image.toByteData(format: ui.ImageByteFormat.png)).buffer.asUint8List();
+  }
 
   @override
   void initState() {
     super.initState();
+    getBytesFromAsset('assets/home_map_marker2.png', 80, 80).then((Uint8List marker){
+      houseMarker = marker;
+      getInitialDetails();
+    });
+    print('House detail: ${widget.house}');
     Geolocator().getCurrentPosition().then((currLoc) {
       setState(() {
         currentLocation = currLoc;
@@ -64,7 +101,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                               initialCameraPosition: CameraPosition(
                                 target: LatLng(currentLocation.longitude,
                                     currentLocation.latitude),
-                                zoom: 5,
+                                zoom: 6,
                               ),
                               markers: Set.from(_markers),
                             )
@@ -102,8 +139,8 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                   height: 15,
                 ),
                 Container(
-                  child: Image.asset(
-                    'assets/bestfriends.png',
+                  child: Image.network(
+                    firstImageUrl,
                     fit: BoxFit.fill,
                   ),
                   height: MediaQuery.of(context).size.height * 0.15,
@@ -176,12 +213,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
       height: MediaQuery.of(context).size.height * 0.3,
       child: Carousel(
         boxFit: BoxFit.cover,
-        images: [
-          AssetImage('assets/bestfriends.png'),
-          AssetImage('assets/notbestfriends.png'),
-          AssetImage('assets/bestfriends.png'),
-          AssetImage('assets/notbestfriends.png'),
-        ],
+        images: carouselImages,
         autoplay: false,
         animationCurve: Curves.fastOutSlowIn,
         animationDuration: Duration(microseconds: 1000),
@@ -200,7 +232,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               Text(
-                '#30,000/yr',
+                '${widget.house['price'].toString()}',
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -219,7 +251,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Text(
-                  'No 33 Beach Streat Jos',
+                  '${widget.house['address']}',
                   style: TextStyle(
                       fontWeight: FontWeight.w400,
                       fontSize: 15,
