@@ -8,6 +8,7 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class User {
   Future<String> uploadPicture(String filePath, File fileName);
@@ -21,7 +22,7 @@ class UserActivity implements User {
   final firebaseStorageRef = FirebaseStorage.instance;
   final firestoreRef = Firestore.instance;
   Geoflutterfire geo = Geoflutterfire();
-
+  SharedPreferences prefs;
   @override
   Future<String> uploadPicture(String filePath, File fileName) async {
     FirebaseUser user = await fbInstance.currentUser();
@@ -39,6 +40,8 @@ class UserActivity implements User {
     await firestoreRef.collection('users').document(user.uid).updateData({
       'photoUrl': downloadUrl,
     });
+    prefs = await SharedPreferences.getInstance();
+    await prefs.setString('photoUrl', downloadUrl);
     return downloadUrl;
   }
 

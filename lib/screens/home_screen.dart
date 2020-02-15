@@ -7,17 +7,17 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:home_gram_beta/screens/add_home_screen.dart';
 import 'package:home_gram_beta/screens/home_detail_screen.dart';
 import 'package:home_gram_beta/screens/login_screen.dart';
-import 'package:home_gram_beta/screens/my_homes_screen.dart';
 import 'package:home_gram_beta/services/auth.dart';
 import 'package:home_gram_beta/services/user.dart';
 import 'package:home_gram_beta/ui/const.dart';
+import 'package:home_gram_beta/widgets/drawer_tile_widget.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;
-
+import 'package:home_gram_beta/widgets/network_sensitivity.dart';
+import 'package:home_gram_beta/widgets/app_bar_widget.dart';
 class HomeScreen extends StatefulWidget {
   HomeScreen({this.auth});
   final BaseAuth auth;
@@ -32,49 +32,47 @@ class _HomeScreenState extends State<HomeScreen> {
   GoogleMapController mapController;
   List<Marker> _markers = [];
   SharedPreferences prefs;
-  String email;
-  String photoUrl;
-  String uid;
-  String displayName;
-  String phoneNo;
   String role;
   double zoomVal = 5.0;
   List<Map<String, dynamic>> houses = List<Map<String, dynamic>>();
   Uint8List houseMarker;
   List<DocumentSnapshot> allHouses;
-  
+
+  GlobalKey<ScaffoldState> _scaffoldKey;
+
   Future<List<DocumentSnapshot>> getInitialDetails() async {
     prefs = await SharedPreferences.getInstance();
-    String localRole = prefs.getString('role');
     List<DocumentSnapshot> documents =
         await widget.user.getClosestHomesToLocation();
     for (int i = 0; i < documents.length; i++) {
       print('home screen documents: ${documents[i].data}');
       initMarker(documents[i].data);
-        setState(() {
-          role = localRole;
-          allHouses = documents;
-          houses.add({
+      setState(() {
+        role = prefs.getString('role');
+        allHouses = documents;
+        houses.add({
           'pictureUrl': documents[i].data['uploadedImages'][i],
           'address': documents[i].data['address'],
           'lat': documents[i].data['position']['geopoint'].latitude,
           'lng': documents[i].data['position']['geopoint'].longitude
-        });  
-        });    
+        });
+      });
     }
+
+    print('photoUrl from shared preferences ${prefs.getString('photoUrl')}');
+    print('name from shared preferences ${prefs.getString('displayName')}');
+    print('phoneNo from shared preferences ${prefs.getString('phoneNo')}');
+
+    print('uid from shared preferences ${prefs.getString('uid')}');
+    print('email from shared preferences ${prefs.getString('email')}');
+    print('role from shared preferences ${prefs.getString('role')}');
+
     print('houses: $houses');
     prefs = await SharedPreferences.getInstance();
-    setState(() {
-      uid = prefs.getString('uid');
-      photoUrl = prefs.getString('photoUrl');
-      email = prefs.getString('email');
-      displayName = prefs.getString('displayName');
-      role = prefs.getString('role');
-    });
     return documents;
   }
 
-  void initMarker(document) async  {
+  void initMarker(document) async {
     _markers.add(Marker(
         markerId: MarkerId(document['address']),
         position: LatLng(document['position']['geopoint'].latitude,
@@ -83,16 +81,22 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: BitmapDescriptor.fromBytes(houseMarker)));
   }
 
-  Future<Uint8List> getBytesFromAsset(String path, int width, int height) async {
+  Future<Uint8List> getBytesFromAsset(
+      String path, int width, int height) async {
     ByteData data = await rootBundle.load(path);
-    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: width, targetHeight: height);
+    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(),
+        targetWidth: width, targetHeight: height);
     ui.FrameInfo fi = await codec.getNextFrame();
-    return (await fi.image.toByteData(format: ui.ImageByteFormat.png)).buffer.asUint8List();
+    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))
+        .buffer
+        .asUint8List();
   }
 
   void initState() {
     super.initState();
-    getBytesFromAsset('assets/home_map_marker2.png', 80, 80).then((Uint8List marker){
+    _scaffoldKey = GlobalKey<ScaffoldState>();
+    getBytesFromAsset('assets/home_map_marker2.png', 80, 80)
+        .then((Uint8List marker) {
       houseMarker = marker;
     });
     Geolocator().getCurrentPosition().then((currLoc) {
@@ -101,17 +105,16 @@ class _HomeScreenState extends State<HomeScreen> {
         print(currLoc.latitude);
         print(currLoc.longitude);
         _markers.add(Marker(
-          markerId: MarkerId('myMarker'),
-          position: LatLng(currLoc.longitude, currLoc.latitude),
-          infoWindow: InfoWindow(title: 'My Location'),
-          icon: BitmapDescriptor.defaultMarker
-        ));
+            markerId: MarkerId('myMarker'),
+            position: LatLng(currLoc.longitude, currLoc.latitude),
+            infoWindow: InfoWindow(title: 'My Location'),
+            icon: BitmapDescriptor.defaultMarker));
         mapToggle = true;
       });
     });
-      getInitialDetails().then((onValue){
-        print(onValue);
-      });
+    getInitialDetails().then((onValue) {
+      print(onValue);
+    });
   }
 
   void handleSignOut(BuildContext context) async {
@@ -134,36 +137,39 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.yellow.shade50,
-      appBar: AppBar(
-        title: Text('Home'),
-      ),
+      appBar: MyAppBar.customAppBar(_scaffoldKey, 'Home'),
       drawer: customizedDrawer(),
-      body: Stack(
-        children: <Widget>[
-          Container(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            child: mapToggle
-                ? GoogleMap(
-                    mapType: MapType.normal,
-                    onMapCreated: _onMapCreated,
-                    initialCameraPosition: CameraPosition(
-                      target: LatLng(
-                          currentLocation.longitude, currentLocation.latitude),
-                      zoom: 8,
-                    ),
-                    markers: Set.from(_markers),
-                  )
-                : Center(child: CircularProgressIndicator()),
-          ),
-          _buildContainer(),
-          zoomMinusFunction(),
-          zoomPlusFunction(),
-        ],
+      body: NetworkSensitive(
+        child: Stack(
+          children: <Widget>[
+            Container(
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
+              child: mapToggle
+                  ? GoogleMap(
+                      mapType: MapType.normal,
+                      onMapCreated: _onMapCreated,
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(currentLocation.longitude,
+                            currentLocation.latitude),
+                        zoom: 8,
+                      ),
+                      markers: Set.from(_markers),
+                    )
+                  : Center(child: CircularProgressIndicator()),
+            ),
+            _buildContainer(),
+            zoomMinusFunction(),
+            zoomPlusFunction(),
+          ],
+        ),
       ),
     );
   }
@@ -179,22 +185,29 @@ class _HomeScreenState extends State<HomeScreen> {
           itemCount: houses.length,
           itemBuilder: (BuildContext context, int index) {
             return Padding(
-                padding: EdgeInsets.all(8.0),
-                child: _boxes(houses[index]['pictureUrl'], houses[index]['lat'],
-                    houses[index]['lng'], houses[index]['address'],  allHouses[index].data), );
+              padding: EdgeInsets.all(8.0),
+              child: _boxes(
+                  houses[index]['pictureUrl'],
+                  houses[index]['lat'],
+                  houses[index]['lng'],
+                  houses[index]['address'],
+                  allHouses[index].data),
+            );
           },
         ),
       ),
     );
   }
 
-  Widget _boxes(String _image, double lat, double long, String houseName, Map<String, dynamic> house) {
+  Widget _boxes(String _image, double lat, double long, String houseName,
+      Map<String, dynamic> house) {
     return GestureDetector(
       onTap: () {
         _goToLocation(lat, long);
       },
-      onDoubleTap: (){
-        Navigator.of(context).push(MaterialPageRoute(builder: (context)=> HomeDetailScreen(house: house)));
+      onDoubleTap: () {
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => HomeDetailScreen(house: house)));
       },
       child: Container(
         child: FittedBox(
@@ -233,65 +246,38 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Drawer customizedDrawer() {
     return Drawer(
-      child: ListView(
-        children: <Widget>[
-          UserAccountsDrawerHeader(
-            accountName: Text('$displayName'),
-            accountEmail: Text('$email'),
-            currentAccountPicture: CircleAvatar(
-              backgroundColor: Colors.brown,
-              child: Text('E'),
-            ),
-            decoration: BoxDecoration(color: themeColor),
-          ),
-          ListTile(
-              title: Text('Home'),
-              trailing: Icon(MdiIcons.home, color: themeColor),
-              onTap: () {
-                // Navigator.of(context).pop();
-                // Navigator.of(context).pushNamed('/profile');
-              }),
-          ListTile(
-              title: Text('Profile'),
-              trailing: Icon(MdiIcons.faceProfile, color: themeColor),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/profile');
-              }),
-              role == 'landlord' ? ListTile(
-              title: Text('Add Home'),
-              trailing: Icon(Fontisto.plus_a, color: themeColor),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).push(MaterialPageRoute(builder: (context)=> AddHomeScreen(user: UserActivity())));
-              }) : null,
-            role == 'landlord' ? ListTile(
-              title: Text('My Homes'),
-              trailing: Icon(Fontisto.nursing_home, color: themeColor),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).push(MaterialPageRoute(builder: (context)=>MyHomeScreen()));
-              }) : null,
-          ListTile(
-            title: Text('About'),
-            trailing: Icon(
-              Icons.details,
-              color: themeColor,
-            ),
-          ),
-          Divider(),
-          ListTile(
-            title: Text('Settings'),
-            trailing: Icon(MdiIcons.settings, color: themeColor),
-            onTap: null,
-          ),
-          ListTile(
-              title: Text('Logout'),
-              trailing: Icon(MdiIcons.exitToApp, color: themeColor),
-              onTap: () => handleSignOut(context)),
-        ],
+        child: ListView(children: <Widget>[
+      UserAccountsDrawerHeader(
+        accountName: Text('${prefs.getString('displayName')}'),
+        accountEmail: Text('${prefs.getString('email')}'),
+        currentAccountPicture: CircleAvatar(
+          backgroundColor: Colors.brown,
+          child: Text('E'),
+        ),
+        decoration: BoxDecoration(color: themeColor),
       ),
-    );
+      DrawerTiles('Home', MdiIcons.home, false, () {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }),
+      DrawerTiles('Profile', MdiIcons.faceProfile, false, () {
+        Navigator.of(context).pushReplacementNamed('/profile');
+      }),
+      DrawerTiles('Add Home', Fontisto.plus_a, false, () {
+        Navigator.of(context).pushReplacementNamed('/addHome');
+      }),
+      DrawerTiles('Manage Homes', Fontisto.nursing_home, false, () {
+        Navigator.of(context).pushReplacementNamed('/myHomes');
+      }),
+      DrawerTiles('About', MdiIcons.details, false, () {
+        Navigator.of(context).pushReplacementNamed('/about');
+      }),
+      DrawerTiles('Settings', MdiIcons.settings, false, () {
+        Navigator.of(context).pushReplacementNamed('/settings');
+      }),
+      DrawerTiles('Logout', MdiIcons.exitToApp, false, () {
+        handleSignOut(context);
+      }),
+    ]));
   }
 
   Widget myDetailsContainer(String houseName) {
@@ -380,5 +366,32 @@ class _HomeScreenState extends State<HomeScreen> {
       target: currentLocation,
       zoom: zoomVal,
     )));
+  }
+
+  AppBar customAppBar(GlobalKey<ScaffoldState> key) {
+    return AppBar(
+      backgroundColor: themeColor,
+      elevation: 1.0,
+      leading: InkWell(
+        onTap: () {
+          key.currentState.openDrawer();
+        },
+        child: Padding(
+          padding: const EdgeInsets.only(left: 10, top: 3),
+          child: Container(
+            width: 30,
+            height: 25,
+            decoration: BoxDecoration(
+                color: themeColor, borderRadius: BorderRadius.circular(8)),
+            child: Icon(
+              MaterialCommunityIcons.menu,
+              size: 45,
+              color: Colors.black,
+            ),
+          ),
+        ),
+      ),
+      title: Center(child: Text('Home')),
+    );
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -8,7 +9,8 @@ import 'package:home_gram_beta/ui/const.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:home_gram_beta/widgets/network_sensitivity.dart';
+import 'package:home_gram_beta/widgets/app_bar_widget.dart';
 class ProfileScreen extends StatefulWidget {
   ProfileScreen({this.user});
   final User user;
@@ -21,12 +23,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   File _image;
   String downloadUrl;
   SharedPreferences prefs;
-  String url;
+  String photoUrl;
   String name;
   String phoneNo;
   String role;
   String email;
   bool isLoading = false;
+  GlobalKey<ScaffoldState> _scaffoldKey;
 
   void getInitDetail() async {
     prefs = await SharedPreferences.getInstance();
@@ -34,7 +37,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       name = prefs.getString('displayName');
       phoneNo = prefs.getInt('phoneNo').toString();
       role = prefs.getString('role');
-      url = prefs.getString('photoUrl');
+      photoUrl = prefs.getString('photoUrl');
       email = prefs.getString('email');
     });
   }
@@ -81,7 +84,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future getImage(BuildContext context) async {
-    var image = await ImagePicker.pickImage(source: ImageSource.gallery,);
+    var image = await ImagePicker.pickImage(
+      source: ImageSource.gallery,
+    );
     setState(() {
       _image = image;
       print('Image pathe: $_image');
@@ -92,133 +97,115 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _scaffoldKey = GlobalKey<ScaffoldState>();
     getInitDetail();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
-          title: Text('Profile'),
-        ),
-        body: Stack(
-          children: <Widget>[
-            Builder(
-              builder: (context) => Container(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: <Widget>[
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Align(
-                            alignment: Alignment.center,
-                            child: CircleAvatar(
-                              radius: 90,
-                              child: ClipOval(
-                                child: SizedBox(
-                                  width: 150,
-                                  height: 150,
-                                  child: downloadUrl == null
-                                      ? Container(
-                                        width: 150,
-                                        height: 150,
-                                        decoration: BoxDecoration(
-                                          image: DecorationImage(
-                                            image: AssetImage('assets/emptypic.png'),
-                                          )
-                                        ),
-                                        child: Container())
-                                      
-                                      : Container(
-                                        decoration: BoxDecoration(
-                                          image: DecorationImage(
-                                        image: NetworkImage(downloadUrl),
-                                        fit: BoxFit.cover
+        key: _scaffoldKey,
+        backgroundColor: Colors.yellow.shade50,
+        appBar: MyAppBar.customAppBar(_scaffoldKey, 'Profile'),
+        body: NetworkSensitive(
+                  child: Stack(
+            children: <Widget>[
+              Builder(
+                builder: (context) => Container(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: <Widget>[
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Align(
+                                alignment: Alignment.center,
+                                child: photoUrl == null
+                                    ? CircularProfileAvatar(
+                                        '',
+                                        child: Image.asset('assets/emptypic.png', fit: BoxFit.cover,),
+                                        borderColor: Colors.grey,
+                                        borderWidth: 5,
+                                        elevation: 2,
+                                        radius: 120,
                                       )
-                                        ),
-                                      )
-                                      // : Image.network(
-                                      //     downloadUrl,
-                                      //     fit: BoxFit.fill,
-                                      //   ),
-                                ),
+                                    : CircularProfileAvatar(
+                                        '',
+                                        child: Image.network(photoUrl,
+                                            fit: BoxFit.cover),
+                                        borderColor: Colors.grey,
+                                        borderWidth: 5,
+                                        elevation: 2,
+                                        radius: 120,
+                                      )),
+                            Padding(
+                              padding: EdgeInsets.only(top: 60),
+                              child: IconButton(
+                                icon: Icon(Icons.camera_alt),
+                                iconSize: 30,
+                                onPressed: () {
+                                  getImage(context);
+                                },
                               ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 60),
-                            child: IconButton(
-                              icon: Icon(Icons.camera_alt),
-                              iconSize: 30,
-                              onPressed: () {
-                                getImage(context);
-                              },
-                            ),
-                          )
-                        ],
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
+                            )
+                          ],
+                        ),
+                        SizedBox(
+                          height: 20,
+                        ),
 
-                      //! Rows
-                      //First Row
-                      customizedRow('Name', Fontisto.person),
-                      Divider(),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      //Next Row
-                      customizedRow('Role', FontAwesome.user),
-                      //Next Row
-                      Divider(),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      customizedRow('Email', MaterialCommunityIcons.email),
-                      Divider(),
-                      // Next Row
-                      SizedBox(
-                        height: 20,
-                      ),
-                      customizedRow('Phone No', Fontisto.phone),
-                      Divider(),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      //Submit and Cancel Buttons
-                    ],
+                        //! Rows
+                        //First Row
+                        customizedRow('Name', Fontisto.person),
+                        Divider(),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        //Next Row
+                        customizedRow('Role', FontAwesome.user),
+                        //Next Row
+                        Divider(),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        customizedRow('Email', MaterialCommunityIcons.email),
+                        Divider(),
+                        // Next Row
+                        SizedBox(
+                          height: 20,
+                        ),
+                        customizedRow('Phone No', Fontisto.phone),
+                        Divider(),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        //Submit and Cancel Buttons
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            Positioned(
-              child: isLoading
-                  ? Container(
-                      height: MediaQuery.of(context).size.height,
-                      width: MediaQuery.of(context).size.width,
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+              Positioned(
+                child: isLoading
+                    ? Container(
+                        height: MediaQuery.of(context).size.height,
+                        width: MediaQuery.of(context).size.width,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                          ),
                         ),
-                      ),
-                      color: Colors.white.withOpacity(0.8),
-                    )
-                  : Container(),
-            )
-          ],
+                        color: Colors.white.withOpacity(0.8),
+                      )
+                    : Container(),
+              )
+            ],
+          ),
         ));
   }
 

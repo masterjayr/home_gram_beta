@@ -45,12 +45,20 @@ dependencies:
   geoflutterfire: any
   introduction_screen: ^1.0.7
   google_fonts: ^0.3.2
-
+  circular_profile_avatar: 1.0.6
+  # flutter_offline: 0.3.0
+  connectivity: 0.4.6+2
+  data_connection_checker: ^0.3.4
+  provider: ^2.0.1
+  
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
+# dependency_overrides:
+#   flutter_offline: 0.3.0
+#   connectivity: 0.4.6+2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

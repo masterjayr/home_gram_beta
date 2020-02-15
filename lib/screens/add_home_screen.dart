@@ -10,6 +10,9 @@ import 'package:home_gram_beta/services/user.dart';
 import 'package:home_gram_beta/ui/const.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
+import 'package:home_gram_beta/enums/connectivity_status.dart';
+import 'package:provider/provider.dart';
+import 'package:home_gram_beta/widgets/app_bar_widget.dart';
 
 const kGoogleApiKey = "AIzaSyBOpNS-z4fmAzb4XENYk15I2Ed_hpgPIlE";
 
@@ -30,9 +33,11 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
   List imageData;
   bool isLoading = false;
   LatLng cords;
+  GlobalKey<ScaffoldState> _scaffoldKey;
   
   @override
   void initState() {
+    _scaffoldKey = GlobalKey<ScaffoldState>();
     super.initState();
   }
 
@@ -117,10 +122,11 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
   }
 
   validateAndSubmit(BuildContext context) async {
+    var connectionStatus = Provider.of<ConnectivityStatus>(context);
     setState(() {
       isLoading = true;
     });
-    if (validateAndSave()) {
+    if (validateAndSave() && connectionStatus == ConnectivityStatus.HasConnection) {
       try {
         List<StorageTaskSnapshot> taskSnapshot = await widget.user
             .postHouseDetail(address, noOfRooms, price, images, cords);
@@ -150,6 +156,11 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
             gravity: ToastGravity.TOP,
             toastLength: Toast.LENGTH_LONG);
       }
+    }else {
+      Scaffold.of(context).showSnackBar(SnackBar(
+          content:
+              Text('You appear to be offline, Try connecting to a network!')));
+
     }
   }
 
@@ -196,15 +207,9 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text('Add New Home Rental'),
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
-        ),
+        key: _scaffoldKey,
+        backgroundColor: Colors.yellow.shade50,
+        appBar: MyAppBar.customAppBar(_scaffoldKey, 'AddHome'),
         body: Stack(
           children: <Widget>[
             Column(
