@@ -15,6 +15,7 @@ abstract class User {
   Future<List<StorageTaskSnapshot>> postHouseDetail(String address,
       int noOfRooms, int price, List<Asset> imageAssets, LatLng coords);
   Future<List<DocumentSnapshot>> getClosestHomesToLocation();
+  Future<List<DocumentSnapshot>> getAllHomes();
 }
 
 class UserActivity implements User {
@@ -88,7 +89,11 @@ class UserActivity implements User {
     StorageTaskSnapshot taskSnapshot = await uploadTask.onComplete;
   }
 
-  Future<String> getAllHomes() async {}
+  Future<List<DocumentSnapshot>> getAllHomes() async {
+    final QuerySnapshot snap = 
+      await firestoreRef.collection('homeRentals').getDocuments();
+    return snap.documents;
+  }
 
   Future<String> getSingleHome(String userId) async {}
 

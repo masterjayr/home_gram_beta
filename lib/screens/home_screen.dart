@@ -144,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: Colors.yellow.shade50,
-      appBar: MyAppBar.customAppBar(_scaffoldKey, 'Home'),
+      appBar: MyAppBar.customAppBar(_scaffoldKey, 'Home', context),
       drawer: customizedDrawer(),
       body: NetworkSensitive(
         child: Stack(

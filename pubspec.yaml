@@ -50,7 +50,7 @@ dependencies:
   connectivity: 0.4.6+2
   data_connection_checker: ^0.3.4
   provider: ^2.0.1
-  
+  http: ^0.12.0+4
 
 dev_dependencies:
   flutter_test:
@@ -83,6 +83,8 @@ flutter:
    - assets/onboarding1.png
    - assets/welcomeaboard.png
    - assets/emptypic.png
+   - assets/home_gram_icon.png
+   - assets/house_image.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

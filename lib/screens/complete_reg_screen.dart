@@ -31,6 +31,7 @@ class _CompleteRegScreenState extends State<CompleteRegScreen> {
   String obtainedRole;
   int _radioValue = -1;
   String determinantRole;
+  String roleFromSignUp;
 
   final formKey = GlobalKey<FormState>();
 
@@ -57,7 +58,7 @@ class _CompleteRegScreenState extends State<CompleteRegScreen> {
     var connectionStatus = Provider.of<ConnectivityStatus>(context);
     if (connectionStatus == ConnectivityStatus.HasConnection) {
       if (validateAndSave()) {
-        if (determinantRole != null) {
+        if (determinantRole != null && obtainedRole != null) {
           try {
             setState(() {
               isLoading = true;

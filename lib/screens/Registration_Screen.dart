@@ -139,18 +139,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     Container(
-                        child: Icon(
-                      Icons.face,
-                      color: themeColor,
-                      size: 60.0,
-                    )),
-                    SizedBox(height: 10.0),
-                    Text(
-                      "LET'S GET STARTED",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 15.0),
-                      textAlign: TextAlign.center,
-                    ),
+                        child: Image.asset('assets/home_gram_icon.png'), height: 90,),
+                    // SizedBox(height: 10.0),
+                    // Text(
+                    //   "LET'S GET STARTED",
+                    //   style: TextStyle(
+                    //       fontWeight: FontWeight.bold, fontSize: 15.0),
+                    //   textAlign: TextAlign.center,
+                    // ),
                     SizedBox(
                       height: 30.0,
                     ),

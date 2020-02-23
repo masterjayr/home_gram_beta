@@ -4,16 +4,21 @@ import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:home_gram_beta/screens/login_screen.dart';
+import 'package:home_gram_beta/services/auth.dart';
 import 'package:home_gram_beta/services/user.dart';
 import 'package:home_gram_beta/ui/const.dart';
+import 'package:home_gram_beta/widgets/drawer_tile_widget.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:home_gram_beta/widgets/network_sensitivity.dart';
 import 'package:home_gram_beta/widgets/app_bar_widget.dart';
 class ProfileScreen extends StatefulWidget {
-  ProfileScreen({this.user});
   final User user;
+  final BaseAuth auth = Auth();
+  ProfileScreen({this.user});
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -101,12 +106,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
     getInitDetail();
   }
 
+
+  void handleSignOut(BuildContext context) async {
+    prefs = await SharedPreferences.getInstance();
+    prefs.remove('email');
+    prefs.remove('photoUrl');
+    prefs.remove('displayName');
+    prefs.remove('role');
+    prefs.remove('phoneNo');
+    Fluttertoast.showToast(
+        msg: 'Logging Out',
+        gravity: ToastGravity.TOP,
+        toastLength: Toast.LENGTH_SHORT);
+    await widget.auth.signOut();
+    Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => LoginScreen(auth: widget.auth)),
+        (Route<dynamic> route) => false);
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         key: _scaffoldKey,
         backgroundColor: Colors.yellow.shade50,
-        appBar: MyAppBar.customAppBar(_scaffoldKey, 'Profile'),
+        appBar: MyAppBar.customAppBar(_scaffoldKey, 'Profile', context),
+        drawer: customizedDrawer(context),
         body: NetworkSensitive(
                   child: Stack(
             children: <Widget>[
@@ -207,6 +231,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ));
+  }
+
+  Drawer customizedDrawer(BuildContext context) {
+    return Drawer(
+        child: ListView(children: <Widget>[
+      UserAccountsDrawerHeader(
+        accountName: Text('${prefs.getString('displayName')}'),
+        accountEmail: Text('${prefs.getString('email')}'),
+        currentAccountPicture: CircleAvatar(
+          backgroundColor: Colors.brown,
+          child: Text('E'),
+        ),
+        decoration: BoxDecoration(color: themeColor),
+      ),
+      DrawerTiles('Home', MdiIcons.home, false, () {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }),
+      DrawerTiles('Profile', MdiIcons.faceProfile, false, () {
+        Navigator.of(context).pushReplacementNamed('/profile');
+      }),
+      DrawerTiles('Add Home', Fontisto.plus_a, false, () {
+        Navigator.of(context).pushReplacementNamed('/addHome');
+      }),
+      DrawerTiles('Manage Homes', Fontisto.nursing_home, false, () {
+        Navigator.of(context).pushReplacementNamed('/myHomes');
+      }),
+      DrawerTiles('About', MdiIcons.details, false, () {
+        Navigator.of(context).pushReplacementNamed('/about');
+      }),
+      DrawerTiles('Settings', MdiIcons.settings, false, () {
+        Navigator.of(context).pushReplacementNamed('/settings');
+      }),
+      DrawerTiles('Logout', MdiIcons.exitToApp, false, () {
+        handleSignOut(context);
+      }),
+    ]));
   }
 
   //customized Row

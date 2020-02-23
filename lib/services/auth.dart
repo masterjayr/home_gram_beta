@@ -140,8 +140,8 @@ class Auth implements BaseAuth {
 
   Future<Null> signOut() async {
     await fbInstance.signOut();
-    await _googleSignIn.disconnect();
-    await _googleSignIn.signOut();
+    // await _googleSignIn.disconnect();
+    // await _googleSignIn.signOut();
   }
 
   @override

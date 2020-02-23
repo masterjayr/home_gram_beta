@@ -6,13 +6,18 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geocoder/geocoder.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
+import 'package:home_gram_beta/screens/login_screen.dart';
+import 'package:home_gram_beta/services/auth.dart';
 import 'package:home_gram_beta/services/user.dart';
 import 'package:home_gram_beta/ui/const.dart';
+import 'package:home_gram_beta/widgets/drawer_tile_widget.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:home_gram_beta/enums/connectivity_status.dart';
 import 'package:provider/provider.dart';
 import 'package:home_gram_beta/widgets/app_bar_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const kGoogleApiKey = "AIzaSyBOpNS-z4fmAzb4XENYk15I2Ed_hpgPIlE";
 
@@ -22,6 +27,8 @@ GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: kGoogleApiKey);
 class AddHomeScreen extends StatefulWidget {
   AddHomeScreen({this.user});
   final User user;
+  final BaseAuth auth = Auth();
+
   @override
   _AddHomeScreenState createState() => _AddHomeScreenState();
 }
@@ -34,11 +41,15 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
   bool isLoading = false;
   LatLng cords;
   GlobalKey<ScaffoldState> _scaffoldKey;
-  
+  SharedPreferences prefs;
+  String email;
+  String displayName;
+
   @override
   void initState() {
-    _scaffoldKey = GlobalKey<ScaffoldState>();
     super.initState();
+    _scaffoldKey = GlobalKey<ScaffoldState>();
+    _getInitialDetails();
   }
 
   buildGridView() {
@@ -119,6 +130,14 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
           toastLength: Toast.LENGTH_LONG);
       return false;
     }
+  }
+
+  _getInitialDetails() async {
+    prefs =await SharedPreferences.getInstance();
+    setState(() {
+      email = prefs.getString('email');
+      displayName = prefs.getString('displayName');  
+    });
   }
 
   validateAndSubmit(BuildContext context) async {
@@ -204,12 +223,32 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
     }
   }
 
+  void handleSignOut(BuildContext context) async {
+    prefs = await SharedPreferences.getInstance();
+    prefs.remove('email');
+    prefs.remove('photoUrl');
+    prefs.remove('displayName');
+    prefs.remove('role');
+    prefs.remove('phoneNo');
+    Fluttertoast.showToast(
+        msg: 'Logging Out',
+        gravity: ToastGravity.TOP,
+        toastLength: Toast.LENGTH_SHORT);
+    await widget.auth.signOut();
+    Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => LoginScreen(auth: widget.auth)),
+        (Route<dynamic> route) => false);
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         key: _scaffoldKey,
         backgroundColor: Colors.yellow.shade50,
-        appBar: MyAppBar.customAppBar(_scaffoldKey, 'AddHome'),
+        appBar: MyAppBar.customAppBar(_scaffoldKey, 'AddHome', context),
+        drawer: customizedDrawer(),
         body: Stack(
           children: <Widget>[
             Column(
@@ -388,4 +427,42 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
           ],
         ));
   }
+
+  Drawer customizedDrawer() {
+    
+    return Drawer(
+        child: ListView(children: <Widget>[
+      UserAccountsDrawerHeader(
+        accountName: Text('$displayName'),
+        accountEmail: Text('$email'),
+        currentAccountPicture: CircleAvatar(
+          backgroundColor: Colors.brown,
+          child: Text('E'),
+        ),
+        decoration: BoxDecoration(color: themeColor),
+      ),
+      DrawerTiles('Home', MdiIcons.home, false, () {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }),
+      DrawerTiles('Profile', MdiIcons.faceProfile, false, () {
+        Navigator.of(context).pushReplacementNamed('/profile');
+      }),
+      DrawerTiles('Add Home', Fontisto.plus_a, false, () {
+        Navigator.of(context).pushReplacementNamed('/addHome');
+      }),
+      DrawerTiles('Manage Homes', Fontisto.nursing_home, false, () {
+        Navigator.of(context).pushReplacementNamed('/myHomes');
+      }),
+      DrawerTiles('About', Icons.description, false, () {
+        Navigator.of(context).pushReplacementNamed('/about');
+      }),
+      DrawerTiles('Settings', MdiIcons.settings, false, () {
+        Navigator.of(context).pushReplacementNamed('/settings');
+      }),
+      DrawerTiles('Logout', MdiIcons.exitToApp, false, () {
+        handleSignOut(context);
+      }),
+    ]));
+  }
+
 }

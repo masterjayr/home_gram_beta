@@ -3,18 +3,26 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:carousel_pro/carousel_pro.dart';
+import 'package:home_gram_beta/screens/login_screen.dart';
+import 'package:home_gram_beta/services/auth.dart';
 import 'package:home_gram_beta/ui/const.dart';
+import 'package:home_gram_beta/widgets/drawer_tile_widget.dart';
 import 'dart:ui' as ui;
 import 'package:home_gram_beta/widgets/network_sensitivity.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:home_gram_beta/widgets/app_bar_widget.dart';
 
 class HomeDetailScreen extends StatefulWidget {
   final Map<String, dynamic> house;
+  final BaseAuth auth = Auth();
+
   HomeDetailScreen({this.house});
+
   @override
   _HomeDetailScreenState createState() => _HomeDetailScreenState();
 }
@@ -32,6 +40,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
   String email;
   int phoneNo;
   GlobalKey<ScaffoldState> _scaffoldKey;
+
   void _onMapCreated(GoogleMapController controller) {
     setState(() {
       mapController = controller;
@@ -74,8 +83,8 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
 
   @override
   void initState() {
-    _scaffoldKey = GlobalKey<ScaffoldState>();
     super.initState();
+    _scaffoldKey = GlobalKey<ScaffoldState>();
     getBytesFromAsset('assets/home_map_marker2.png', 80, 80)
         .then((Uint8List marker) {
       houseMarker = marker;
@@ -94,11 +103,27 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
     });
   }
 
+  void handleSignOut(BuildContext context) async {
+    prefs.remove('email');
+    prefs.remove('photoUrl');
+    prefs.remove('displayName');
+    Fluttertoast.showToast(
+        msg: 'Logging Out',
+        gravity: ToastGravity.TOP,
+        toastLength: Toast.LENGTH_SHORT);
+    await widget.auth.signOut();
+    Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => LoginScreen(auth: widget.auth)),
+        (Route<dynamic> route) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: MyAppBar.customAppBar(_scaffoldKey, 'Home Detail'),
+        key: _scaffoldKey,
+        backgroundColor: Colors.yellow.shade50,
+        appBar: MyAppBar.customAppBar(_scaffoldKey, 'Home Detail', context),
+        drawer: customizedDrawer(),
         body: SafeArea(
           child: SingleChildScrollView(
             child: NetworkSensitive(
@@ -245,6 +270,42 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
         ));
   }
 
+    Drawer customizedDrawer() {
+    return Drawer(
+        child: ListView(children: <Widget>[
+      UserAccountsDrawerHeader(
+        accountName: Text('${prefs.getString('displayName')}'),
+        accountEmail: Text('${prefs.getString('email')}'),
+        currentAccountPicture: CircleAvatar(
+          backgroundColor: Colors.brown,
+          child: Text('E'),
+        ),
+        decoration: BoxDecoration(color: themeColor),
+      ),
+      DrawerTiles('Home', MdiIcons.home, false, () {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }),
+      DrawerTiles('Profile', MdiIcons.faceProfile, false, () {
+        Navigator.of(context).pushReplacementNamed('/profile');
+      }),
+      DrawerTiles('Add Home', Fontisto.plus_a, false, () {
+        Navigator.of(context).pushReplacementNamed('/addHome');
+      }),
+      DrawerTiles('Manage Homes', Fontisto.nursing_home, false, () {
+        Navigator.of(context).pushReplacementNamed('/myHomes');
+      }),
+      DrawerTiles('About', MdiIcons.details, false, () {
+        Navigator.of(context).pushReplacementNamed('/about');
+      }),
+      DrawerTiles('Settings', MdiIcons.settings, false, () {
+        Navigator.of(context).pushReplacementNamed('/settings');
+      }),
+      DrawerTiles('Logout', MdiIcons.exitToApp, false, () {
+        handleSignOut(context);
+      }),
+    ]));
+  }
+
   Widget _imageCarousel(context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.3,
@@ -269,7 +330,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               Text(
-                '${widget.house['price'].toString()}',
+                'N${widget.house['price'].toString()}',
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,

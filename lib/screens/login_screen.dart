@@ -157,11 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
                         Container(
-                            child: Icon(
-                          Icons.face,
-                          color: themeColor,
-                          size: 60.0,
-                        )),
+                            child: Image.asset('assets/home_gram_icon.png'), height: 90,),
                         SizedBox(height: 50.0),
                         Form(
                           key: formKey,
@@ -266,32 +262,34 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(
                           height: 10.0,
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Container(
-                              height: 1.0,
-                              width: 130.0,
-                              color: Colors.black26,
-                            ),
-                            SizedBox(
-                              width: 3.0,
-                            ),
-                            Text(
-                              'OR',
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            SizedBox(
-                              width: 3.0,
-                            ),
-                            Container(
-                              height: 1.0,
-                              width: 130.0,
-                              color: Colors.black26,
-                            )
-                          ],
+                        FittedBox(
+                                                  child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Container(
+                                height: 1.0,
+                                width: 130.0,
+                                color: Colors.black26,
+                              ),
+                              SizedBox(
+                                width: 3.0,
+                              ),
+                              Text(
+                                'OR',
+                                style: TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(
+                                width: 3.0,
+                              ),
+                              Container(
+                                height: 1.0,
+                                width: 130.0,
+                                color: Colors.black26,
+                              )
+                            ],
+                          ),
                         ),
                         ButtonTheme(
                           height: 50,
