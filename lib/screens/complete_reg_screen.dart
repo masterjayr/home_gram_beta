@@ -8,6 +8,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:home_gram_beta/screens/home_screen.dart';
 import 'package:home_gram_beta/services/auth.dart';
 import 'package:home_gram_beta/ui/const.dart';
+import 'package:home_gram_beta/widgets/loader.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:home_gram_beta/enums/connectivity_status.dart';
@@ -112,6 +113,8 @@ class _CompleteRegScreenState extends State<CompleteRegScreen> {
               content:
                   Text('Choose a role please :) Either landlord or tenant')));
         }
+      } else {
+        print('I am the Problem');
       }
     } else {
       Scaffold.of(context).showSnackBar(SnackBar(
@@ -161,155 +164,172 @@ class _CompleteRegScreenState extends State<CompleteRegScreen> {
         backgroundColor: Colors.yellow.shade50,
         body: Builder(builder: (context) {
           return SingleChildScrollView(
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 15.0, horizontal: 20.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    FittedBox(
-                      child: Text(
-                        'You are only a step away from completing your registration\nChoose a profile picture and provide the required information to continue',
-                        style: TextStyle(
-                            fontSize: 70,
-                            color: Colors.black54,
-                            fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    SizedBox(height: 50),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        CircularProfileAvatar(
-                          '',
-                          child: _image == null
-                              ? Image.asset('assets/emptypic.png',
-                                  fit: BoxFit.cover)
-                              : Image.file(_image, fit: BoxFit.cover),
-                          borderColor: Colors.grey,
-                          borderWidth: 5,
-                          elevation: 2,
-                          radius: 80,
+              child: Stack(
+            children: <Widget>[
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 15.0, horizontal: 20.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      FittedBox(
+                        child: Text(
+                          'You are only a step away from completing your registration\nChoose a profile picture and provide the required information to continue',
+                          style: TextStyle(
+                              fontSize: 70,
+                              color: Colors.black54,
+                              fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
                         ),
-                        Padding(
-                          padding: EdgeInsets.only(top: 60),
-                          child: IconButton(
-                            icon: Icon(Icons.camera_alt),
-                            iconSize: 30,
-                            onPressed: () {
-                              getImage(context);
-                            },
-                          ),
-                        )
-                      ],
-                    ),
-                    Form(
-                      key: formKey,
-                      child: Column(
+                      ),
+                      SizedBox(height: 50),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          TextFormField(
-                            initialValue: prefs.getString('displayName'),
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return 'Name can\'t be empty';
-                              }
-                              return null;
-                            },
-                            onSaved: (value) {
-                              setState(() {
-                                name = value;
-                              });
-                            },
-                            decoration: InputDecoration(
-                              suffixIcon: Icon(Fontisto.person),
-                              labelText: 'Name',
-                              labelStyle: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 15.0),
-                              hintText: 'Achukwuleke Kosiso',
-                              hintStyle: TextStyle(fontStyle: FontStyle.italic),
+                          CircularProfileAvatar(
+                            '',
+                            child: _image == null
+                                ? Image.asset('assets/emptypic.png',
+                                    fit: BoxFit.cover)
+                                : Image.file(_image, fit: BoxFit.cover),
+                            borderColor: Colors.grey,
+                            borderWidth: 5,
+                            elevation: 2,
+                            radius: 80,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 60),
+                            child: IconButton(
+                              icon: Icon(Icons.camera_alt),
+                              iconSize: 30,
+                              onPressed: () {
+                                getImage(context);
+                              },
                             ),
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          TextFormField(
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return 'Phone No can\'t be empty';
-                              }
-                              return null;
-                            },
-                            onSaved: (value) {
-                              setState(() {
-                                phoneNum = num.tryParse(value);
-                              });
-                            },
-                            keyboardType: TextInputType.phone,
-                            inputFormatters: <TextInputFormatter>[
-                              WhitelistingTextInputFormatter.digitsOnly
-                            ],
-                            decoration: InputDecoration(
-                              suffixIcon: Icon(MaterialCommunityIcons.phone),
-                              labelText: 'Phone No',
-                              labelStyle: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 15.0),
-                              hintStyle: TextStyle(fontStyle: FontStyle.italic),
-                            ),
-                          ),
-                          obtainedRole == null
-                              ? Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: <Widget>[
-                                    Radio(
-                                      value: 0,
-                                      groupValue: _radioValue,
-                                      onChanged: _handleRadioValueChange,
-                                      activeColor: themeColor,
-                                    ),
-                                    Text(
-                                      'LandLord',
-                                      style: TextStyle(fontSize: 16.0),
-                                    ),
-                                    Radio(
-                                      value: 1,
-                                      groupValue: _radioValue,
-                                      onChanged: _handleRadioValueChange,
-                                      activeColor: themeColor,
-                                    ),
-                                    Text(
-                                      'Tenant',
-                                      style: TextStyle(fontSize: 16.0),
-                                    ),
-                                  ],
-                                )
-                              : Container(),
+                          )
                         ],
                       ),
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    ButtonTheme(
-                      height: 40,
-                      child: RaisedButton(
-                        onPressed: () => validateAndSubmit(context),
-                        textColor: Colors.black54,
-                        child: Text(
-                          'SIGN UP',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 15.0),
+                      Form(
+                        key: formKey,
+                        child: Column(
+                          children: <Widget>[
+                            TextFormField(
+                              initialValue: prefs.getString('displayName'),
+                              validator: (value) {
+                                if (value.isEmpty) {
+                                  return 'Name can\'t be empty';
+                                }
+                                return null;
+                              },
+                              onSaved: (value) {
+                                setState(() {
+                                  name = value;
+                                });
+                              },
+                              decoration: InputDecoration(
+                                suffixIcon: Icon(Fontisto.person),
+                                labelText: 'Name',
+                                labelStyle: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15.0),
+                                hintText: 'Achukwuleke Kosiso',
+                                hintStyle:
+                                    TextStyle(fontStyle: FontStyle.italic),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            TextFormField(
+                              validator: (value) {
+                                if (value.isEmpty) {
+                                  return 'Phone No can\'t be empty';
+                                }
+                                return null;
+                              },
+                              onSaved: (value) {
+                                setState(() {
+                                  phoneNum = num.tryParse(value);
+                                });
+                              },
+                              keyboardType: TextInputType.phone,
+                              inputFormatters: <TextInputFormatter>[
+                                WhitelistingTextInputFormatter.digitsOnly
+                              ],
+                              decoration: InputDecoration(
+                                suffixIcon: Icon(MaterialCommunityIcons.phone),
+                                labelText: 'Phone No',
+                                labelStyle: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15.0),
+                                hintStyle:
+                                    TextStyle(fontStyle: FontStyle.italic),
+                              ),
+                            ),
+                            obtainedRole == null
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: <Widget>[
+                                      Radio(
+                                        value: 0,
+                                        groupValue: _radioValue,
+                                        onChanged: _handleRadioValueChange,
+                                        activeColor: themeColor,
+                                      ),
+                                      Text(
+                                        'LandLord',
+                                        style: TextStyle(fontSize: 16.0),
+                                      ),
+                                      Radio(
+                                        value: 1,
+                                        groupValue: _radioValue,
+                                        onChanged: _handleRadioValueChange,
+                                        activeColor: themeColor,
+                                      ),
+                                      Text(
+                                        'Tenant',
+                                        style: TextStyle(fontSize: 16.0),
+                                      ),
+                                    ],
+                                  )
+                                : Container(),
+                          ],
                         ),
-                        color: themeColor,
                       ),
-                    ),
-                  ],
+                      SizedBox(
+                        height: 10,
+                      ),
+                      ButtonTheme(
+                        height: 40,
+                        child: RaisedButton(
+                          onPressed: () => validateAndSubmit(context),
+                          textColor: Colors.black54,
+                          child: Text(
+                            'SIGN UP',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 15.0),
+                          ),
+                          color: themeColor,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
+              Positioned(
+                child: isLoading
+                    ? Container(
+                        height: MediaQuery.of(context).size.height,
+                        width: MediaQuery.of(context).size.width,
+                        child: Loader(),
+                        color: Colors.white.withOpacity(0.8),
+                      )
+                    : Container(),
+              )
+            ],
+          ));
         }));
   }
 }

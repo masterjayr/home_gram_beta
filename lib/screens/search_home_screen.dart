@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
@@ -9,7 +10,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:home_gram_beta/enums/connectivity_status.dart';
 import 'package:home_gram_beta/screens/login_screen.dart';
+import 'package:home_gram_beta/screens/search_results_screen.dart';
 import 'package:home_gram_beta/services/auth.dart';
+import 'package:home_gram_beta/services/user.dart';
 import 'package:home_gram_beta/ui/const.dart';
 import 'package:home_gram_beta/widgets/drawer_tile_widget.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -17,12 +20,13 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
-const kGoogleApiKey = "AIzaSyBOpNS-z4fmAzb4XENYk15I2Ed_hpgPIlE";
+const kGoogleApiKey = "";
 
 GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: kGoogleApiKey);
 
 class SearchHomeScreen extends StatefulWidget {
   final BaseAuth auth = Auth();
+  final UserActivity user = UserActivity();
   @override
   _SearchHomeScreenState createState() => _SearchHomeScreenState();
 }
@@ -40,12 +44,66 @@ class _SearchHomeScreenState extends State<SearchHomeScreen> {
   var hestimate;
   bool textIsLoading = false;
   String _currentSelectedValue;
+  String roleForTab;
+  bool goodDialog = false;
 
   var _noOfRooms = [
     "1",
     "2",
     "3",
   ];
+
+  searchHome(BuildContext context, String address) async {
+    try {
+      List<DocumentSnapshot> snap =
+          await widget.user.getParticularHome(address);
+      if (snap != null) {
+        setState(() {
+          goodDialog = true;
+        });
+        _showDialog(context,
+            '${snap.length} results found! click VIEW to see details', snap);
+      } else {
+        setState(() {
+          goodDialog = false;
+        });
+        _showDialog(context, 'NO search results found');
+      }
+    } catch (e) {
+      Fluttertoast.showToast(msg: 'An error occured ${e.toString()}');
+    }
+  }
+
+  void _showDialog(BuildContext context, String msg,
+      [List<DocumentSnapshot> snap]) {
+    // flutter defined function
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: goodDialog ? Text("Progress!") : Text("Ooops!"),
+            content: Center(child: Text(msg)),
+            actions: <Widget>[
+              // usually buttons at the bottom of the dialog
+              new FlatButton(
+                child: goodDialog ? Text('VIEW') : Text("OK"),
+                onPressed: () {
+                  if(goodDialog){
+                    Navigator.of(context).pop();
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => SearchResultScreen(
+                                docs: snap,
+                              )));
+                  }else{
+                    Navigator.of(context).pop();
+                  }
+                    
+                },
+              ),
+            ],
+          );
+        });
+  }
 
   void runHestimate(BuildContext context) async {
     var connectionStatus = Provider.of<ConnectivityStatus>(context);
@@ -100,6 +158,13 @@ class _SearchHomeScreenState extends State<SearchHomeScreen> {
     }
   }
 
+  _getInitialDetail() async {
+    prefs = await SharedPreferences.getInstance();
+    setState(() {
+      roleForTab = prefs.getString('role');
+    });
+  }
+
   Future<void> displayPrediction(Prediction p) async {
     try {
       if (p != null) {
@@ -129,6 +194,7 @@ class _SearchHomeScreenState extends State<SearchHomeScreen> {
   @override
   void initState() {
     super.initState();
+    _getInitialDetail();
     _scaffoldKey = GlobalKey<ScaffoldState>();
   }
 
@@ -302,7 +368,6 @@ class _SearchHomeScreenState extends State<SearchHomeScreen> {
                         child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
-                              Icon(Fontisto.dollar),
                               SizedBox(
                                 width: 5,
                               ),
@@ -355,8 +420,10 @@ class _SearchHomeScreenState extends State<SearchHomeScreen> {
                     padding: EdgeInsets.all(8.0),
                     child: ButtonTheme(
                       height: 50,
-                      child: RaisedButton(
-                        onPressed: () => {},
+                      child: OutlineButton(
+                        onPressed: () {
+                          searchHome(context, location);
+                        },
                         textColor: Colors.blueGrey,
                         child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -381,12 +448,6 @@ class _SearchHomeScreenState extends State<SearchHomeScreen> {
                               SizedBox(
                                 width: 15,
                               ),
-                              localIsLoading
-                                  ? CircularProgressIndicator(
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.blueGrey,
-                                    ))
-                                  : Container()
                             ]),
                         color: themeColor,
                       ),
@@ -434,11 +495,10 @@ class _SearchHomeScreenState extends State<SearchHomeScreen> {
     return Drawer(
         child: ListView(children: <Widget>[
       UserAccountsDrawerHeader(
-        accountName: Text(''),
-        accountEmail: Text(''),
+        accountName: Text('${prefs.getString('displayName')}'),
+        accountEmail: Text('${prefs.getString('email')}'),
         currentAccountPicture: CircleAvatar(
-          backgroundColor: Colors.brown,
-          child: Text('E'),
+          backgroundImage: NetworkImage('${prefs.getString('photoUrl')}'),
         ),
         decoration: BoxDecoration(color: themeColor),
       ),
@@ -448,12 +508,19 @@ class _SearchHomeScreenState extends State<SearchHomeScreen> {
       DrawerTiles('Profile', MdiIcons.faceProfile, false, () {
         Navigator.of(context).pushReplacementNamed('/profile');
       }),
-      DrawerTiles('Add Home', Fontisto.plus_a, false, () {
-        Navigator.of(context).pushReplacementNamed('/addHome');
+      DrawerTiles('Search Home', MdiIcons.searchWeb, false, () {
+        Navigator.of(context).pushReplacementNamed('/searchHome');
       }),
-      DrawerTiles('Manage Homes', Fontisto.nursing_home, false, () {
-        Navigator.of(context).pushReplacementNamed('/myHomes');
-      }),
+      roleForTab == 'landlord'
+          ? DrawerTiles('Add Home', Fontisto.plus_a, false, () {
+              Navigator.of(context).pushReplacementNamed('/addHome');
+            })
+          : Container(),
+      roleForTab == 'landlord'
+          ? DrawerTiles('Manage Homes', Fontisto.nursing_home, false, () {
+              Navigator.of(context).pushReplacementNamed('/myHomes');
+            })
+          : Container(),
       DrawerTiles('About', MdiIcons.details, false, () {
         Navigator.of(context).pushReplacementNamed('/about');
       }),

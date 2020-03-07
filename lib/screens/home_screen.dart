@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> houses = List<Map<String, dynamic>>();
   Uint8List houseMarker;
   List<DocumentSnapshot> allHouses;
-
+  String roleForTab;
   GlobalKey<ScaffoldState> _scaffoldKey;
 
   Future<List<DocumentSnapshot>> getInitialDetails() async {
@@ -48,7 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
       print('home screen documents: ${documents[i].data}');
       initMarker(documents[i].data);
       setState(() {
-        role = prefs.getString('role');
         allHouses = documents;
         houses.add({
           'pictureUrl': documents[i].data['uploadedImages'][i],
@@ -58,7 +57,10 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       });
     }
-
+    setState(() {
+      role = prefs.getString('role');
+      roleForTab = prefs.getString('role');
+    });
     print('photoUrl from shared preferences ${prefs.getString('photoUrl')}');
     print('name from shared preferences ${prefs.getString('displayName')}');
     print('phoneNo from shared preferences ${prefs.getString('phoneNo')}');
@@ -70,6 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
     print('houses: $houses');
     prefs = await SharedPreferences.getInstance();
     return documents;
+
+
   }
 
   void initMarker(document) async {
@@ -137,7 +141,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
       key: _scaffoldKey,
       backgroundColor: Colors.yellow.shade50,
       appBar: MyAppBar.customAppBar(_scaffoldKey, 'Home', context),
-      drawer: customizedDrawer(),
+      drawer: customizedDrawer(context),
       body: NetworkSensitive(
         child: Stack(
           children: <Widget>[
@@ -159,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       initialCameraPosition: CameraPosition(
                         target: LatLng(currentLocation.longitude,
                             currentLocation.latitude),
-                        zoom: 8,
+                        zoom: 9,
                       ),
                       markers: Set.from(_markers),
                     )
@@ -244,15 +247,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Drawer customizedDrawer() {
+  Drawer customizedDrawer(BuildContext context) {
     return Drawer(
         child: ListView(children: <Widget>[
       UserAccountsDrawerHeader(
         accountName: Text('${prefs.getString('displayName')}'),
         accountEmail: Text('${prefs.getString('email')}'),
         currentAccountPicture: CircleAvatar(
-          backgroundColor: Colors.brown,
-          child: Text('E'),
+          backgroundImage: NetworkImage('${prefs.getString('photoUrl')}'),
         ),
         decoration: BoxDecoration(color: themeColor),
       ),
@@ -262,12 +264,16 @@ class _HomeScreenState extends State<HomeScreen> {
       DrawerTiles('Profile', MdiIcons.faceProfile, false, () {
         Navigator.of(context).pushReplacementNamed('/profile');
       }),
-      DrawerTiles('Add Home', Fontisto.plus_a, false, () {
+
+      DrawerTiles('Search Home', MdiIcons.searchWeb, false, () {
+        Navigator.of(context).pushReplacementNamed('/searchHome');
+      }),
+      roleForTab == 'landlord' ?DrawerTiles('Add Home', Fontisto.plus_a, false, () {
         Navigator.of(context).pushReplacementNamed('/addHome');
-      }),
-      DrawerTiles('Manage Homes', Fontisto.nursing_home, false, () {
+      }) : Container(),
+      roleForTab == 'landlord' ? DrawerTiles('Manage Homes', Fontisto.nursing_home, false, () {
         Navigator.of(context).pushReplacementNamed('/myHomes');
-      }),
+      }) : Container(),
       DrawerTiles('About', MdiIcons.details, false, () {
         Navigator.of(context).pushReplacementNamed('/about');
       }),

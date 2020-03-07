@@ -10,6 +10,7 @@ import 'package:home_gram_beta/screens/login_screen.dart';
 import 'package:home_gram_beta/screens/my_homes_screen.dart';
 import 'package:home_gram_beta/screens/profile_screen.dart';
 import 'package:home_gram_beta/screens/search_home_screen.dart';
+import 'package:home_gram_beta/screens/search_results_screen.dart';
 import 'package:home_gram_beta/screens/settings_screen.dart';
 import 'package:home_gram_beta/screens/splash_screen.dart';
 import 'package:home_gram_beta/services/auth.dart';
@@ -17,6 +18,7 @@ import 'package:home_gram_beta/services/user.dart';
 import 'package:home_gram_beta/ui/const.dart';
 import 'package:home_gram_beta/enums/connectivity_status.dart';
 import 'package:home_gram_beta/services/connectivity_service.dart';
+import 'package:home_gram_beta/widgets/loader.dart';
 import 'package:provider/provider.dart';
 import 'package:home_gram_beta/screens/all_homes_screen.dart';
 
@@ -35,7 +37,7 @@ class MyApp extends StatelessWidget {
             body1: GoogleFonts.nunito(fontSize: 15)
           )
         ),
-        home: SearchHomeScreen(),
+        home:LoginScreen(auth: Auth(),),
         routes: <String, WidgetBuilder>{
           '/profile' : (BuildContext context) => ProfileScreen(user: UserActivity(),),
           '/home' : (BuildContext context)=> HomeScreen(auth: Auth(),),
@@ -44,7 +46,8 @@ class MyApp extends StatelessWidget {
            '/myHomes' : (BuildContext context) => MyHomeScreen(),
           '/about' : (BuildContext context) => AboutScreen(),
           '/settings' : (BuildContext context) => SettingsScreen(),
-          '/allHomes' : (BuildContext context) => AllHomesScreen()
+          '/allHomes' : (BuildContext context) => AllHomesScreen(),
+          '/searchHome': (BuildContext context) => SearchHomeScreen()
         },
         debugShowCheckedModeBanner: false,
       ),

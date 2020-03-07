@@ -35,7 +35,7 @@ class MyAppBar {
           padding: const EdgeInsets.all(10.0),
           child: Tooltip(
             message: 'View Available Houses',
-            child: IconButton(icon: Icon(Fontisto.eye, color: primaryColor,),
+            child: IconButton(icon: Icon(Fontisto.list_1, color: primaryColor,),
              onPressed: () {
                Navigator.of(context).pushNamed('/allHomes');
              }),

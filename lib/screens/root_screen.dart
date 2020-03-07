@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:home_gram_beta/screens/home_screen.dart';
 import 'package:home_gram_beta/screens/login_screen.dart';
 import 'package:home_gram_beta/services/auth.dart';
+import 'package:home_gram_beta/widgets/loader.dart';
 
 
 class RootScreen extends StatelessWidget {
@@ -23,7 +24,7 @@ class RootScreen extends StatelessWidget {
   Widget _buildWaitingScreen() {
     return Scaffold(
       body: Container(
-        child: CircularProgressIndicator(),
+        child: Loader()
       ),
     );
   }

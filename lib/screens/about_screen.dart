@@ -22,7 +22,7 @@ class AboutScreen extends StatelessWidget {
                   centerTitle: true,
                   title: FittedBox(
                     child: Text(
-                      'Search',
+                      'About',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.white, fontSize: 20),
                     ),

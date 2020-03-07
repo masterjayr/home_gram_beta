@@ -7,6 +7,7 @@ import 'package:home_gram_beta/screens/complete_reg_screen.dart';
 import 'package:home_gram_beta/screens/home_screen.dart';
 import 'package:home_gram_beta/services/auth.dart';
 import 'package:home_gram_beta/ui/const.dart';
+import 'package:home_gram_beta/widgets/loader.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Registration_Screen.dart';
 import 'package:home_gram_beta/enums/connectivity_status.dart';
@@ -60,11 +61,10 @@ class _LoginScreenState extends State<LoginScreen> {
             String nameFromSignIn = prefs.getString('nameFromSignIn');
             int phoneNoFromSignIn = prefs.getInt('phoneNoFromSignIn');
             String roleFromSignIn = prefs.getString('roleFromSignIn');
-
+            
             await prefs.setString('uid', result.user.uid);
             await prefs.setString('email', result.user.email);
-            await prefs.setString('photoUrl',
-                result.user.photoUrl == null ? '' : photoUrlFromSignIn);
+            await prefs.setString('photoUrl',photoUrlFromSignIn);
             await prefs.setString('displayName', nameFromSignIn);
             await prefs.setString('role', roleFromSignIn);
             await prefs.setInt('phoneNo', phoneNoFromSignIn);
@@ -344,12 +344,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? Container(
                           height: MediaQuery.of(context).size.height,
                           width: MediaQuery.of(context).size.width,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(themeColor),
-                            ),
-                          ),
+                          child: Loader(),
                           color: Colors.white.withOpacity(0.8),
                         )
                       : Container(),

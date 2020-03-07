@@ -51,6 +51,8 @@ dependencies:
   data_connection_checker: ^0.3.4
   provider: ^2.0.1
   http: ^0.12.0+4
+  currency_icons: ^0.0.2
+  url_launcher: ^5.4.2
 
 dev_dependencies:
   flutter_test:

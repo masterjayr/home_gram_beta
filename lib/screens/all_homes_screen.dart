@@ -288,6 +288,7 @@ class _CardState extends State<Card> {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 50,
+                      fontWeight: FontWeight.bold
                     )),
               ],
             ),

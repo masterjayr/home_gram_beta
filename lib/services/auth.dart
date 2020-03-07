@@ -11,8 +11,8 @@ abstract class BaseAuth {
   Future<AuthResult> signInWithEmailAndPassword(String email, String password);
   Future<AuthResult> createUserWithEmailAndPassword(
       String email, String password, String role);
-  Future<String> completeReg(String name, int phoneNo, File profilePic,
-      [String role]);
+  Future<DocumentSnapshot> completeReg(String name, int phoneNo, [File profilePic,
+      String role]);
   Future<String> currentUser();
   Future<Null> signOut();
   Future<AuthResult> googleSignUp();
@@ -24,7 +24,7 @@ class Auth implements BaseAuth {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final firebaseStorageRef = FirebaseStorage.instance;
   final firestoreRef = Firestore.instance;
-
+  String defaultPicture = 'https://firebasestorage.googleapis.com/v0/b/homegrambeta.appspot.com/o/defaultPicture%2Femptypic.png?alt=media&token=4828ce56-9216-48a5-bee9-1e61be7c83a4';
   @override
   Stream<String> get onAuthStateChanged {
     return fbInstance.onAuthStateChanged.map((user) => user?.uid);
@@ -69,7 +69,7 @@ class Auth implements BaseAuth {
       'uid': result.user.uid,
       'displayName': null,
       'photoUrl': null,
-      'phoneNo': null,
+      'phoneNo': defaultPicture,
       'role': role
     });
     // final QuerySnapshot snap = await Firestore.instance.collection('users').where('uid', isEqualTo: result.user.uid)
@@ -145,12 +145,12 @@ class Auth implements BaseAuth {
   }
 
   @override
-  Future<String> completeReg(String name, int phoneNo, File profilePic,
-      [String role]) async {
-    String fileName = basename(profilePic.path);
-    FirebaseUser user = await fbInstance.currentUser();
-    print('current userId,');
-    print(user.uid);
+  Future<DocumentSnapshot> completeReg(String name, int phoneNo, [File profilePic,
+      String role]) async {
+        FirebaseUser user = await fbInstance.currentUser();
+        String downloadUrl;
+    if(profilePic != null){
+      String fileName = basename(profilePic.path);
     StorageReference storageRef = firebaseStorageRef
         .ref()
         .child('Profile Images')
@@ -159,16 +159,24 @@ class Auth implements BaseAuth {
     StorageUploadTask uploadTask = storageRef.putFile(profilePic);
     StorageTaskSnapshot taskSnapshot = await uploadTask.onComplete;
     print('task Snapshot, $taskSnapshot');
-    String downloadUrl = await storageRef.getDownloadURL();
-    role == null
-        ? await firestoreRef.collection('users').document(user.uid).updateData(
-            {'displayName': name, 'photoUrl': downloadUrl, 'phoneNo': phoneNo})
-        : await firestoreRef.collection('users').document(user.uid).updateData({
+    downloadUrl = await storageRef.getDownloadURL();
+    
+    }
+    
+    if(profilePic == null) {
+      await firestoreRef.collection('users').document(user.uid).updateData(
+            {'displayName': name, 'photoUrl': defaultPicture, 'phoneNo': phoneNo});
+    }else if(role == null){
+      await firestoreRef.collection('users').document(user.uid).updateData(
+            {'displayName': name, 'photoUrl': downloadUrl, 'phoneNo': phoneNo});
+    }else {
+      await firestoreRef.collection('users').document(user.uid).updateData({
             'displayName': name,
             'photoUrl': downloadUrl,
             'phoneNo': phoneNo,
             'role': role
           });
+    }
     final QuerySnapshot snap = await Firestore.instance
         .collection('users')
         .where('uid', isEqualTo: user.uid)
@@ -183,6 +191,6 @@ class Auth implements BaseAuth {
       await prefs.setInt('phoneNoFromSignIn', documents[0].data['phoneNo']);
       await prefs.setString('roleFromSignIn', documents[0].data['role']);
     }
-    return downloadUrl;
+   return documents[0];
   }
 }

@@ -16,6 +16,8 @@ abstract class User {
       int noOfRooms, int price, List<Asset> imageAssets, LatLng coords);
   Future<List<DocumentSnapshot>> getClosestHomesToLocation();
   Future<List<DocumentSnapshot>> getAllHomes();
+  Future<List<DocumentSnapshot>> getAllUserHomes();
+  Future<List<DocumentSnapshot>> getParticularHome(String address);
 }
 
 class UserActivity implements User {
@@ -45,7 +47,7 @@ class UserActivity implements User {
     await prefs.setString('photoUrl', downloadUrl);
     return downloadUrl;
   }
-
+  @override
   Future<List<StorageTaskSnapshot>> postHouseDetail(String address,
       int noOfRooms, int price, List<Asset> imageAssets, LatLng coords) async {
     FirebaseUser user = await fbInstance.currentUser();
@@ -88,20 +90,26 @@ class UserActivity implements User {
     final StorageUploadTask uploadTask = storageRef.putFile(filePath);
     StorageTaskSnapshot taskSnapshot = await uploadTask.onComplete;
   }
-
+  @override
   Future<List<DocumentSnapshot>> getAllHomes() async {
     final QuerySnapshot snap = 
       await firestoreRef.collection('homeRentals').getDocuments();
     return snap.documents;
   }
-
-  Future<String> getSingleHome(String userId) async {}
+  @override
+  Future<List<DocumentSnapshot>> getAllUserHomes() async {
+    final userId = await fbInstance.currentUser();
+    final QuerySnapshot snap = await firestoreRef.collection('homeRentals').where('uid', isEqualTo: userId.uid).getDocuments();
+    final List<DocumentSnapshot> documents = snap.documents;
+    return documents;
+    
+  }
 
   int getDistanceInKms(double distance) {
     double value =  distance.round()/1000;
     return value.round();
   }
-
+  @override
   Future<List<DocumentSnapshot>> getClosestHomesToLocation() async {
     var currLoc = await Geolocator().getCurrentPosition();
     List<DocumentSnapshot> documentToBeReturned = List<DocumentSnapshot>();
@@ -119,7 +127,7 @@ class UserActivity implements User {
             .then((double distanceInMeters) {
           print('Distance: $distanceInMeters');
           print('Distance from method ${getDistanceInKms(distanceInMeters)}');
-          if(getDistanceInKms(distanceInMeters) < 100){
+          if(getDistanceInKms(distanceInMeters) < 1000){
           documentToBeReturned.add(documents[i]);
         }
         });
@@ -128,5 +136,12 @@ class UserActivity implements User {
         
     }
     return documentToBeReturned;
+  }
+
+  @override
+  Future<List<DocumentSnapshot>> getParticularHome(String address) async{
+    QuerySnapshot snapshot  = await firestoreRef.collection('homeRentals').where('address', isEqualTo: address).getDocuments();
+    List<DocumentSnapshot> docs = snapshot.documents;
+    return docs;
   }
 }

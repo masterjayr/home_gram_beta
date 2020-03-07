@@ -6,6 +6,7 @@ import 'package:home_gram_beta/screens/complete_reg_screen.dart';
 import 'package:home_gram_beta/screens/login_screen.dart';
 import 'package:home_gram_beta/services/auth.dart';
 import 'package:home_gram_beta/ui/const.dart';
+import 'package:home_gram_beta/widgets/loader.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:home_gram_beta/enums/connectivity_status.dart';
 import 'package:provider/provider.dart';
@@ -301,12 +302,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     ? Container(
                         height: MediaQuery.of(context).size.height,
                         width: MediaQuery.of(context).size.width,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(themeColor),
-                          ),
-                        ),
+                        child: Loader(),
                         color: Colors.white.withOpacity(0.8),
                       )
                     : Container(),

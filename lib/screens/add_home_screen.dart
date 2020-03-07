@@ -11,6 +11,7 @@ import 'package:home_gram_beta/services/auth.dart';
 import 'package:home_gram_beta/services/user.dart';
 import 'package:home_gram_beta/ui/const.dart';
 import 'package:home_gram_beta/widgets/drawer_tile_widget.dart';
+import 'package:home_gram_beta/widgets/loader.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
@@ -44,6 +45,13 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
   SharedPreferences prefs;
   String email;
   String displayName;
+  String _currentValue;
+  String roleForTab;
+  var _noOfRooms = [
+    "1",
+    "2",
+    "3",
+  ];
 
   @override
   void initState() {
@@ -137,6 +145,7 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
     setState(() {
       email = prefs.getString('email');
       displayName = prefs.getString('displayName');  
+      roleForTab = prefs.getString('role');
     });
   }
 
@@ -146,12 +155,17 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
       isLoading = true;
     });
     if (validateAndSave() && connectionStatus == ConnectivityStatus.HasConnection) {
+      setState(() {
+        noOfRooms = num.tryParse(_currentValue);
+      });
       try {
         List<StorageTaskSnapshot> taskSnapshot = await widget.user
             .postHouseDetail(address, noOfRooms, price, images, cords);
         if (taskSnapshot.length != 0) {
           setState(() {
             isLoading = false;
+            Navigator.of(context).pop();
+          Navigator.of(context).pushNamed('/myHomes');
           });
           Fluttertoast.showToast(
               msg: 'Home Rental Successfully Posted',
@@ -248,7 +262,7 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
         key: _scaffoldKey,
         backgroundColor: Colors.yellow.shade50,
         appBar: MyAppBar.customAppBar(_scaffoldKey, 'AddHome', context),
-        drawer: customizedDrawer(),
+        drawer: customizedDrawer(context),
         body: Stack(
           children: <Widget>[
             Column(
@@ -318,32 +332,73 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
                             SizedBox(
                               height: 20,
                             ),
-                            TextFormField(
+                            FormField<String>(
                               validator: (value) {
                                 if (value.isEmpty) {
-                                  return 'Number of Rooms can\'t be empty';
+                                  return 'Number of rooms can\'t be empty';
+                                } else {
+                                  return null;
                                 }
-                                return null;
                               },
-                              onSaved: (value) {
-                                setState(() {
-                                  noOfRooms = num.tryParse(value);
-                                });
+                              builder: (FormFieldState<String> state) {
+                                return InputDecorator(
+                                  decoration: InputDecoration(
+                                      labelText: 'Number of rooms',
+                                      errorStyle: TextStyle(
+                                          color: Colors.redAccent,
+                                          fontSize: 16.0),
+                                      hintText: 'Select Number of Rooms',
+                                      border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(5.0))),
+                                  isEmpty: _currentValue == '',
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: _currentValue,
+                                      isDense: true,
+                                      onChanged: (String newValue) {
+                                        setState(() {
+                                          _currentValue = newValue;
+                                          state.didChange(newValue);
+                                        });
+                                      },
+                                      items: _noOfRooms.map((String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Text(value),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                                );
                               },
-                              keyboardType: TextInputType.number,
-                              inputFormatters: <TextInputFormatter>[
-                                WhitelistingTextInputFormatter.digitsOnly
-                              ],
-                              decoration: InputDecoration(
-                                suffixIcon: Icon(Icons.format_list_numbered),
-                                labelText: 'No of Rooms',
-                                labelStyle: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15.0),
-                                hintStyle:
-                                    TextStyle(fontStyle: FontStyle.italic),
-                              ),
                             ),
+                            // TextFormField(
+                            //   validator: (value) {
+                            //     if (value.isEmpty) {
+                            //       return 'Number of Rooms can\'t be empty';
+                            //     }
+                            //     return null;
+                            //   },
+                            //   onSaved: (value) {
+                            //     setState(() {
+                            //       noOfRooms = num.tryParse(value);
+                            //     });
+                            //   },
+                            //   keyboardType: TextInputType.number,
+                            //   inputFormatters: <TextInputFormatter>[
+                            //     WhitelistingTextInputFormatter.digitsOnly
+                            //   ],
+                            //   decoration: InputDecoration(
+                            //     suffixIcon: Icon(Icons.format_list_numbered),
+                            //     labelText: 'No of Rooms',
+                            //     labelStyle: TextStyle(
+                            //         fontWeight: FontWeight.bold,
+                            //         fontSize: 15.0),
+                            //     hintStyle:
+                            //         TextStyle(fontStyle: FontStyle.italic),
+                            //   ),
+                            // ),
                             SizedBox(
                               height: 20,
                             ),
@@ -415,11 +470,7 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
                   ? Container(
                       height: MediaQuery.of(context).size.height,
                       width: MediaQuery.of(context).size.width,
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                        ),
-                      ),
+                      child: Loader(),
                       color: Colors.white.withOpacity(0.8),
                     )
                   : Container(),
@@ -428,7 +479,7 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
         ));
   }
 
-  Drawer customizedDrawer() {
+  Drawer customizedDrawer(BuildContext context) {
     
     return Drawer(
         child: ListView(children: <Widget>[
@@ -436,8 +487,7 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
         accountName: Text('$displayName'),
         accountEmail: Text('$email'),
         currentAccountPicture: CircleAvatar(
-          backgroundColor: Colors.brown,
-          child: Text('E'),
+          backgroundImage: NetworkImage('${prefs.getString('photoUrl')}'),
         ),
         decoration: BoxDecoration(color: themeColor),
       ),
@@ -447,12 +497,16 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
       DrawerTiles('Profile', MdiIcons.faceProfile, false, () {
         Navigator.of(context).pushReplacementNamed('/profile');
       }),
-      DrawerTiles('Add Home', Fontisto.plus_a, false, () {
+      DrawerTiles('Search Home', MdiIcons.searchWeb, false, () {
+        Navigator.of(context).pushReplacementNamed('/searchHome');
+      }),
+      roleForTab == 'landlord' ?DrawerTiles('Add Home', Fontisto.plus_a, false, () {
         Navigator.of(context).pushReplacementNamed('/addHome');
-      }),
-      DrawerTiles('Manage Homes', Fontisto.nursing_home, false, () {
+      }) : Container(),
+      roleForTab == 'landlord' ? DrawerTiles('Manage Homes', Fontisto.nursing_home, false, () {
         Navigator.of(context).pushReplacementNamed('/myHomes');
-      }),
+      }) : Container(),
+      
       DrawerTiles('About', Icons.description, false, () {
         Navigator.of(context).pushReplacementNamed('/about');
       }),

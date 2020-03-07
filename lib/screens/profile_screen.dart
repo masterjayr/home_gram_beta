@@ -9,6 +9,7 @@ import 'package:home_gram_beta/services/auth.dart';
 import 'package:home_gram_beta/services/user.dart';
 import 'package:home_gram_beta/ui/const.dart';
 import 'package:home_gram_beta/widgets/drawer_tile_widget.dart';
+import 'package:home_gram_beta/widgets/loader.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:path/path.dart';
@@ -34,6 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String role;
   String email;
   bool isLoading = false;
+  String roleForTab;
   GlobalKey<ScaffoldState> _scaffoldKey;
 
   void getInitDetail() async {
@@ -44,6 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       role = prefs.getString('role');
       photoUrl = prefs.getString('photoUrl');
       email = prefs.getString('email');
+      roleForTab = prefs.getString('role');
     });
   }
 
@@ -149,16 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           children: <Widget>[
                             Align(
                                 alignment: Alignment.center,
-                                child: photoUrl == null
-                                    ? CircularProfileAvatar(
-                                        '',
-                                        child: Image.asset('assets/emptypic.png', fit: BoxFit.cover,),
-                                        borderColor: Colors.grey,
-                                        borderWidth: 5,
-                                        elevation: 2,
-                                        radius: 120,
-                                      )
-                                    : CircularProfileAvatar(
+                                child: CircularProfileAvatar(
                                         '',
                                         child: Image.network(photoUrl,
                                             fit: BoxFit.cover),
@@ -219,11 +213,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ? Container(
                         height: MediaQuery.of(context).size.height,
                         width: MediaQuery.of(context).size.width,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-                          ),
-                        ),
+                        child: Loader(),
                         color: Colors.white.withOpacity(0.8),
                       )
                     : Container(),
@@ -240,8 +230,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         accountName: Text('${prefs.getString('displayName')}'),
         accountEmail: Text('${prefs.getString('email')}'),
         currentAccountPicture: CircleAvatar(
-          backgroundColor: Colors.brown,
-          child: Text('E'),
+          backgroundImage: NetworkImage('${prefs.getString('photoUrl')}'),
         ),
         decoration: BoxDecoration(color: themeColor),
       ),
@@ -251,12 +240,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       DrawerTiles('Profile', MdiIcons.faceProfile, false, () {
         Navigator.of(context).pushReplacementNamed('/profile');
       }),
-      DrawerTiles('Add Home', Fontisto.plus_a, false, () {
+      DrawerTiles('Search Home', MdiIcons.searchWeb, false, () {
+        Navigator.of(context).pushReplacementNamed('/searchHome');
+      }),
+      roleForTab == 'landlord' ?DrawerTiles('Add Home', Fontisto.plus_a, false, () {
         Navigator.of(context).pushReplacementNamed('/addHome');
-      }),
-      DrawerTiles('Manage Homes', Fontisto.nursing_home, false, () {
+      }) : Container(),
+      roleForTab == 'landlord' ? DrawerTiles('Manage Homes', Fontisto.nursing_home, false, () {
         Navigator.of(context).pushReplacementNamed('/myHomes');
-      }),
+      }) : Container(),
+      
       DrawerTiles('About', MdiIcons.details, false, () {
         Navigator.of(context).pushReplacementNamed('/about');
       }),
@@ -312,15 +305,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            child: Icon(
-              Icons.edit,
-              color: primaryColor,
-            ),
-          ),
-        )
+        
       ],
     );
   }

@@ -16,6 +16,7 @@ import 'package:home_gram_beta/widgets/network_sensitivity.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:home_gram_beta/widgets/app_bar_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeDetailScreen extends StatefulWidget {
   final Map<String, dynamic> house;
@@ -39,6 +40,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
   String name;
   String email;
   int phoneNo;
+  String roleForTab;
   GlobalKey<ScaffoldState> _scaffoldKey;
 
   void _onMapCreated(GoogleMapController controller) {
@@ -58,6 +60,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
       name = prefs.getString('displayName');
       email = prefs.getString('email');
       phoneNo = prefs.getInt('phoneNo');
+      roleForTab = prefs.getString('role');
     });
     setState(() {
       firstImageUrl = widget.house['uploadedImages'][0];
@@ -277,8 +280,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
         accountName: Text('${prefs.getString('displayName')}'),
         accountEmail: Text('${prefs.getString('email')}'),
         currentAccountPicture: CircleAvatar(
-          backgroundColor: Colors.brown,
-          child: Text('E'),
+          backgroundImage: NetworkImage('${prefs.getString('photoUrl')}'),
         ),
         decoration: BoxDecoration(color: themeColor),
       ),
@@ -288,12 +290,16 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
       DrawerTiles('Profile', MdiIcons.faceProfile, false, () {
         Navigator.of(context).pushReplacementNamed('/profile');
       }),
-      DrawerTiles('Add Home', Fontisto.plus_a, false, () {
+      DrawerTiles('Search Home', MdiIcons.searchWeb, false, () {
+        Navigator.of(context).pushReplacementNamed('/searchHome');
+      }),
+      roleForTab == 'landlord' ?DrawerTiles('Add Home', Fontisto.plus_a, false, () {
         Navigator.of(context).pushReplacementNamed('/addHome');
-      }),
-      DrawerTiles('Manage Homes', Fontisto.nursing_home, false, () {
+      }) : Container(),
+      roleForTab == 'landlord' ? DrawerTiles('Manage Homes', Fontisto.nursing_home, false, () {
         Navigator.of(context).pushReplacementNamed('/myHomes');
-      }),
+      }) : Container(),
+      
       DrawerTiles('About', MdiIcons.details, false, () {
         Navigator.of(context).pushReplacementNamed('/about');
       }),
@@ -411,7 +417,11 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(15.0))),
       height: 40,
-      onPressed: () {},
+      onPressed: text == 'call' ? () {
+        String phoneNum = 'tel:' + '08082822';
+        launch(phoneNum);
+
+      } : () {},
     );
   }
 }
